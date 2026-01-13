@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Admin - Sistema de Ponto</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a33;
+      --muted:#9aa4b2;
+      --text:#e6edf3;
+      --line:rgba(255,255,255,.08);
+      --accent:#22c55e;
+      --accent2:#60a5fa;
+      --danger:#ef4444;
+      --chip:#111b35;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(180deg,#0b1220,#060a14);color:var(--text)}
+    a{color:#9ae6b4;text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{
+      position:sticky;top:0;z-index:10;
+      background:rgba(11,18,32,.85);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+      padding:14px 16px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    }
+    .brand{display:flex;flex-direction:column;gap:2px}
+    .brand b{font-size:16px}
+    .brand span{font-size:12px;color:var(--muted)}
+    .actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .btn{
+      border:0;border-radius:10px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.08);
+      color:var(--text);
+      cursor:pointer;
+    }
+    .btn:hover{background:rgba(255,255,255,.12)}
+    .btn.primary{background:rgba(34,197,94,.18);border:1px solid rgba(34,197,94,.35)}
+    .btn.primary:hover{background:rgba(34,197,94,.26)}
+    .btn.blue{background:rgba(96,165,250,.18);border:1px solid rgba(96,165,250,.35)}
+    .btn.blue:hover{background:rgba(96,165,250,.26)}
+    .btn.danger{background:rgba(239,68,68,.16);border:1px solid rgba(239,68,68,.35)}
+    .btn.danger:hover{background:rgba(239,68,68,.24)}
+    main{max-width:1200px;margin:18px auto;padding:0 14px 28px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .card{
+      background:rgba(15,26,51,.75);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h3{margin:0 0 10px;font-size:14px;color:#dbe5f0}
+    .muted{color:var(--muted)}
+    .dangerText{color:var(--danger)}
+    .okText{color:var(--accent)}
+    .kpis{display:flex;gap:12px;flex-wrap:wrap}
+    .kpi{flex:1;min-width:190px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px}
+    .kpi .v{font-size:20px;font-weight:700}
+    .kpi .l{font-size:12px;color:var(--muted);margin-top:4px}
+    .toolbar{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    }
+    input,select{
+      border-radius:12px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;
+      outline:none;
+    }
+    input::placeholder{color:rgba(154,164,178,.7)}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid var(--line);padding:12px;text-align:left;vertical-align:top}
+    th{font-size:12px;color:var(--muted);font-weight:600}
+    td{font-size:13px}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:6px 10px;border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      font-size:12px;color:#dbe5f0;
+    }
+    .chip.in{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.12)}
+    .chip.out{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.12)}
+    .chip.other{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.12)}
+    .thumb{
+      width:74px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line);
+      cursor:pointer;display:block;
+    }
+    .nowrap{white-space:nowrap}
+    .small{font-size:12px;color:var(--muted)}
+    .twoCol{display:flex;flex-direction:column;gap:2px}
+    .spacer{height:6px}
+    .footerNote{font-size:12px;color:var(--muted);margin-top:8px}
+    /* Modal */
+    .modalBack{
+      position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:999;
+      padding:16px;
+    }
+    .modal{
+      width:min(980px,96vw);
+      background:rgba(15,26,51,.95);
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+    }
+    .modalTop{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+    .modalTop b{font-size:14px}
+    .modalBody{padding:12px}
+    .modalBody img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line)}
+    @media (max-width: 900px){
+      .hideMobile{display:none}
+      th,td{padding:10px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <b>Área Administrativa</b>
+      <span id="who" class="muted">—</span>
+    </div>
+
+    <div class="actions">
+      <a class="muted" href="index.html">Voltar</a>
+      <button class="btn danger" id="logout">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- CONTROLES -->
+      <div class="card" style="grid-column: span 12;">
+        <div class="toolbar">
+          <input id="filter" placeholder="Filtrar por nome/email/uid (contém)" style="min-width:280px;flex:1" />
+          <label class="muted small">Mês:</label>
+          <input id="monthPicker" type="month" />
+          <button class="btn blue" id="reload">Recarregar</button>
+          <span id="msg" class="muted"></span>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="v" id="kpiLogs">—</div>
+            <div class="l">Registros listados (tela)</div>
+          </div>
+          <div class="kpi">
+            <div class="v" id="kpiUsers">—</div>
+            <div class="l">Usuários no mês selecionado</div>
+          </div>
+          <div class="kpi">
+            <div class="v" id="kpiHours">—</div>
+            <div class="l">Horas totais (mês selecionado)</div>
+          </div>
+          <div class="kpi">
+            <div class="v" id="kpiOpen">—</div>
+            <div class="l">Pendências (sem SAÍDA)</div>
+          </div>
+        </div>
+
+        <div class="footerNote">
+          Regra do cálculo: soma apenas pares completos <b>ENTRADA → SAÍDA</b> por usuário no mês. Se faltar SAÍDA, fica como pendente e não conta nas horas.
+        </div>
+      </div>
+
+      <!-- TABELA LOGS -->
+      <div class="card" style="grid-column: span 12;">
+        <h3>Registros (últimos 300 do mês selecionado)</h3>
+        <div style="overflow:auto;border-radius:14px;border:1px solid var(--line)">
+          <table>
+            <thead>
+              <tr>
+                <th class="nowrap">Data/Hora</th>
+                <th>Usuário</th>
+                <th class="nowrap">Tipo</th>
+                <th class="hideMobile">Localização</th>
+                <th class="nowrap">Selfie</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RESUMO MENSAL -->
+      <div class="card" style="grid-column: span 12;">
+        <h3>Resumo do mês (01 → último dia)</h3>
+        <div class="muted" id="summaryInfo"></div>
+
+        <div style="overflow:auto;margin-top:10px;border-radius:14px;border:1px solid var(--line)">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th class="nowrap">UID</th>
+                <th class="nowrap">Horas no mês</th>
+                <th class="nowrap">Dias com ponto</th>
+                <th class="nowrap">Pendências</th>
+              </tr>
+            </thead>
+            <tbody id="summaryRows"></tbody>
+          </table>
+        </div>
+
+        <div class="footerNote">
+          Dica: se você quiser “obrigar” ENTRADA/SAÍDA certinho, dá pra travar no app: bloquear SAÍDA sem ENTRADA aberta e vice-versa.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL IMAGEM -->
+  <div class="modalBack" id="modalBack">
+    <div class="modal">
+      <div class="modalTop">
+        <b id="modalTitle">Selfie</b>
+        <button class="btn" id="modalClose">Fechar</button>
+      </div>
+      <div class="modalBody">
+        <img id="modalImg" alt="Selfie" />
+        <div class="small muted" id="modalLink" style="margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      collection,
+      query,
+      where,
+      orderBy,
+      limit,
+      getDocs,
+      Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // ✅ CONFIRA: storageBucket não é usado aqui no admin, mas mantenha config consistente no projeto
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOyhVCdV1dUWdgQXnPWhRHTb6xVYn68bk",
+      authDomain: "spq-v1.firebaseapp.com",
+      projectId: "spq-v1",
+      storageBucket: "spq-v1.firebasestorage.app",
+      messagingSenderId: "472363662852",
+      appId: "1:472363662852:web:10517568e7a010ff203f51"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // UI
+    const who = document.getElementById("who");
+    const msg = document.getElementById("msg");
+    const rows = document.getElementById("rows");
+    const filter = document.getElementById("filter");
+    const reload = document.getElementById("reload");
+    const logout = document.getElementById("logout");
+    const monthPicker = document.getElementById("monthPicker");
+
+    const kpiLogs = document.getElementById("kpiLogs");
+    const kpiUsers = document.getElementById("kpiUsers");
+    const kpiHours = document.getElementById("kpiHours");
+    const kpiOpen = document.getElementById("kpiOpen");
+
+    const summaryInfo = document.getElementById("summaryInfo");
+    const summaryRows = document.getElementById("summaryRows");
+
+    // Modal
+    const modalBack = document.getElementById("modalBack");
+    const modalClose = document.getElementById("modalClose");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalLink = document.getElementById("modalLink");
+
+    modalClose.addEventListener("click", () => modalBack.style.display = "none");
+    modalBack.addEventListener("click", (e) => { if (e.target === modalBack) modalBack.style.display = "none"; });
+
+    function setMsg(t, cls="muted"){ msg.className = cls; msg.textContent = t; }
+    function fmtDate(ts) {
+      if (!ts) return "";
+      const dt = ts.toDate ? ts.toDate() : new Date(ts);
+      return dt.toLocaleString();
+    }
+    function chipForType(type){
+      const t = (type || "").toUpperCase();
+      if (t === "ENTRADA") return `<span class="chip in">ENTRADA</span>`;
+      if (t === "SAIDA" || t === "SAÍDA") return `<span class="chip out">SAÍDA</span>`;
+      return `<span class="chip other">${t || "-"}</span>`;
+    }
+    function containsAny(text, term) {
+      if (!term) return true;
+      return (text || "").toLowerCase().includes(term.toLowerCase());
+    }
+
+    async function isAdmin(uid) {
+      const ref = doc(db, "users", uid);
+      const snap = await getDoc(ref);
+      return snap.exists() && snap.data().role === "admin";
+    }
+
+    function getMonthRangeFromPicker(){
+      // monthPicker value: "YYYY-MM"
+      const v = monthPicker.value;
+      const now = new Date();
+      const year = v ? Number(v.split("-")[0]) : now.getFullYear();
+      const month = v ? Number(v.split("-")[1]) - 1 : now.getMonth();
+
+      const start = new Date(year, month, 1, 0, 0, 0, 0);
+      const end = new Date(year, month + 1, 1, 0, 0, 0, 0); // exclusivo
+      return { start, end, year, month };
+    }
+
+    function fmtMonthLabel(year, month){
+      const d = new Date(year, month, 1);
+      return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    }
+
+    function msToHours(ms){
+      const h = ms / (1000 * 60 * 60);
+      return h;
+    }
+    function fmtHours(h){
+      // 12.5 -> "12h 30m"
+      const totalMin = Math.round(h * 60);
+      const hh = Math.floor(totalMin / 60);
+      const mm = totalMin % 60;
+      return `${hh}h ${String(mm).padStart(2,"0")}m`;
+    }
+
+    function dayKey(date){
+      const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      return d.toISOString().slice(0,10); // yyyy-mm-dd
+    }
+
+    // Carrega punches do mês (para resumo e logs)
+    async function fetchPunchesInRange(start, end){
+      const q = query(
+        collection(db, "punches"),
+        where("createdAt", ">=", Timestamp.fromDate(start)),
+        where("createdAt", "<", Timestamp.fromDate(end)),
+        orderBy("createdAt", "asc")
+      );
+      const snap = await getDocs(q);
+      const out = [];
+      snap.forEach(d => out.push({ id: d.id, ...d.data() }));
+      return out;
+    }
+
+    function computeMonthlySummary(punches){
+      // Agrupa por uid e calcula pares ENTRADA->SAIDA
+      const byUser = new Map();
+
+      for (const p of punches){
+        const uid = p.uid || "—";
+        const userName = p.userName || "—";
+        if (!byUser.has(uid)){
+          byUser.set(uid, {
+            uid,
+            userName,
+            punches: [],
+            totalMs: 0,
+            openCount: 0,
+            days: new Set()
+          });
+        }
+        const bucket = byUser.get(uid);
+        bucket.punches.push(p);
+      }
+
+      for (const u of byUser.values()){
+        // Ordena por data (asc)
+        u.punches.sort((a,b) => (a.createdAt?.toMillis?.() ?? 0) - (b.createdAt?.toMillis?.() ?? 0));
+
+        let openEntry = null; // Timestamp
+        for (const p of u.punches){
+          const t = (p.type || "").toUpperCase();
+          const dt = p.createdAt?.toDate?.() ? p.createdAt.toDate() : null;
+          if (dt) u.days.add(dayKey(dt));
+
+          if (t === "ENTRADA"){
+            // se já tem entrada aberta, conta como pendência anterior e substitui pela mais recente
+            if (openEntry) u.openCount += 1;
+            openEntry = p.createdAt;
+          } else if (t === "SAIDA" || t === "SAÍDA"){
+            if (openEntry && openEntry.toMillis){
+              const diff = (p.createdAt?.toMillis?.() ?? 0) - openEntry.toMillis();
+              if (diff > 0 && diff < 1000*60*60*24) { // trava 24h (evita bug)
+                u.totalMs += diff;
+              }
+              openEntry = null;
+            } else {
+              // saída sem entrada
+              u.openCount += 1;
+            }
+          }
+        }
+        if (openEntry) u.openCount += 1; // ficou aberto no fim do mês
+      }
+
+      return Array.from(byUser.values())
+        .sort((a,b) => b.totalMs - a.totalMs);
+    }
+
+    async function renderLogsAndSummary(){
+      rows.innerHTML = "";
+      summaryRows.innerHTML = "";
+
+      const { start, end, year, month } = getMonthRangeFromPicker();
+      const label = fmtMonthLabel(year, month);
+      setMsg(`Carregando dados de ${label}...`);
+
+      let punches = [];
+      try{
+        punches = await fetchPunchesInRange(start, end);
+      } catch (e){
+        console.error(e);
+        setMsg("Erro ao buscar punches. Talvez precise criar índice no Firestore para createdAt.", "dangerText");
+        return;
+      }
+
+      // Logs (últimos 300 do mês)
+      const term = filter.value.trim().toLowerCase();
+      const punchesDesc = [...punches].sort((a,b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+      const last = punchesDesc.slice(0, 300);
+
+      let shown = 0;
+      for (const p of last){
+        const userText = `${p.userName || ""} ${p.uid || ""}`.toLowerCase();
+        if (!containsAny(userText, term)) continue;
+        shown++;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="nowrap">${fmtDate(p.createdAt)}</td>
+          <td>
+            <div class="twoCol">
+              <b>${p.userName || "-"}</b>
+              <span class="small">${p.uid || "-"}</span>
+            </div>
+          </td>
+          <td class="nowrap">${chipForType(p.type)}</td>
+          <td class="hideMobile">
+            <div>${p.locationText || "-"}</div>
+            <div class="small">${(p.lat ?? "")} ${(p.lon ?? "")}</div>
+          </td>
+          <td class="nowrap">
+            ${p.selfieUrl ? `<img class="thumb" src="${p.selfieUrl}" alt="selfie"/>` : `<span class="muted">—</span>`}
+          </td>
+        `;
+        // click thumb -> modal
+        const img = tr.querySelector(".thumb");
+        if (img){
+          img.addEventListener("click", () => {
+            modalTitle.textContent = `${p.userName || "Usuário"} • ${fmtDate(p.createdAt)}`;
+            modalImg.src = p.selfieUrl;
+            modalLink.innerHTML = `<a href="${p.selfieUrl}" target="_blank" rel="noopener">Abrir em nova aba</a>`;
+            modalBack.style.display = "flex";
+          });
+        }
+        rows.appendChild(tr);
+      }
+
+      kpiLogs.textContent = String(shown);
+
+      // Resumo
+      const summary = computeMonthlySummary(punches);
+      summaryInfo.textContent = `Resumo de ${label} (01 → último dia). Total de registros no mês: ${punches.length}.`;
+
+      let totalHours = 0;
+      let openTotal = 0;
+
+      for (const u of summary){
+        const hours = msToHours(u.totalMs);
+        totalHours += hours;
+        openTotal += u.openCount;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <div class="twoCol">
+              <b>${u.userName}</b>
+              <span class="small muted">—</span>
+            </div>
+          </td>
+          <td class="small">${u.uid}</td>
+          <td class="nowrap"><b>${fmtHours(hours)}</b></td>
+          <td class="nowrap">${u.days.size}</td>
+          <td class="nowrap">${u.openCount ? `<span class="dangerText"><b>${u.openCount}</b></span>` : `<span class="okText"><b>0</b></span>`}</td>
+        `;
+        summaryRows.appendChild(tr);
+      }
+
+      kpiUsers.textContent = String(summary.length);
+      kpiHours.textContent = fmtHours(totalHours);
+      kpiOpen.textContent = String(openTotal);
+
+      setMsg(`OK. ${label} carregado.`, "okText");
+    }
+
+    reload.addEventListener("click", renderLogsAndSummary);
+    filter.addEventListener("input", () => { /* opcional: debounce */ renderLogsAndSummary(); });
+    monthPicker.addEventListener("change", renderLogsAndSummary);
+
+    logout.addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    });
+
+    // default month = current
+    (function initMonth(){
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth()+1).padStart(2,"0");
+      monthPicker.value = `${y}-${m}`;
+    })();
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        who.textContent = "Você precisa estar logado.";
+        setMsg("Você precisa estar logado.", "dangerText");
+        setTimeout(() => window.location.href = "index.html", 600);
+        return;
+      }
+
+      who.textContent = `Logado como ${user.email || user.uid}`;
+
+      const ok = await isAdmin(user.uid);
+      if (!ok) {
+        setMsg("Acesso negado: você não é admin.", "dangerText");
+        return;
+      }
+
+      await renderLogsAndSummary();
+    });
+  </script>
+  <script src="jsconfig.js"></script>
+</body>
+</html>
