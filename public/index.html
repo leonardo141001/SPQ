@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Sistema de Ponto</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a2e;
+      --card2:#0c1629;
+      --text:#eaf0ff;
+      --muted:#a9b6d3;
+      --line:rgba(255,255,255,.08);
+      --brand:#4CAF50;
+      --brand2:#22c55e;
+      --danger:#ff5a6a;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 700px at 20% -10%, rgba(34,197,94,.25), transparent 55%),
+        radial-gradient(900px 600px at 110% 10%, rgba(76,175,80,.22), transparent 55%),
+        linear-gradient(180deg, var(--bg), #070c16 70%);
+      color:var(--text);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .topbar{
+      position:sticky; top:0; z-index:20;
+      padding: 14px 14px calc(12px + env(safe-area-inset-top));
+      backdrop-filter: blur(10px);
+      background: rgba(11,18,32,.65);
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-inner{
+      max-width: 560px; margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 10px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
+    .logo-dot{
+      width:12px; height:12px; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, #b7ffcd, var(--brand2));
+      box-shadow: 0 0 0 6px rgba(34,197,94,.15);
+      flex:0 0 auto;
+    }
+    .brand h1{
+      font-size: 15px;
+      margin:0;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .top-actions{ display:flex; gap:8px; align-items:center; }
+    .btn{
+      border:0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition: transform .05s ease, opacity .15s ease, background .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active{ transform: scale(.99); }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+    .btn-ghost{
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .btn-primary{
+      background: linear-gradient(180deg, #46d06b, var(--brand2));
+      color:#04110a;
+      box-shadow: 0 10px 25px rgba(34,197,94,.25);
+    }
+
+    .wrap{
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card + .card{ margin-top: 14px; }
+
+    .card-head{
+      padding: 14px 14px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.02);
+    }
+    .card-title{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .2px;
+    }
+    .sub{
+      margin:6px 0 0;
+      font-size:12px;
+      color: var(--muted);
+      line-height:1.35;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(34,197,94,.35);
+      background: rgba(34,197,94,.12);
+      color: #bfffd2;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .pill .dot{
+      width:8px; height:8px; border-radius:50%;
+      background: var(--brand2);
+      box-shadow: 0 0 0 5px rgba(34,197,94,.15);
+    }
+
+    /* LOGIN */
+    .form{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .field{ display:flex; flex-direction:column; gap:6px; text-align:left; }
+    .label{ font-size:12px; color: var(--muted); font-weight: 700; }
+    .input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+    }
+    .input::placeholder{ color: rgba(169,182,211,.7); }
+    .row{ display:flex; gap: 10px; }
+    .row > *{ flex:1; }
+    .hint{ font-size: 12px; color: var(--muted); line-height: 1.4; }
+    #status{ max-width:560px; margin: 10px auto 0; padding: 0 14px; font-size: 12px; color: var(--muted); }
+
+    /* CAMERA */
+    .camera{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .videoWrap{
+      position: relative;
+      border-radius: 16px;
+      overflow:hidden;
+      border: 1px solid var(--line);
+      background: #000;
+    }
+    video{
+      width:100%;
+      height:auto;
+      display:block;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+    canvas{ display:none; }
+
+    .meta{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .meta b{ color: var(--text); font-weight: 800; }
+
+    .result{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .result.ok{
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.10);
+      color: #bfffd2;
+    }
+    .result.danger{
+      border-color: rgba(255,90,106,.35);
+      background: rgba(255,90,106,.10);
+      color: #ffd2d7;
+    }
+    .result a{ color: #bfe0ff; text-decoration: none; font-weight: 800; }
+
+    /* HISTORY */
+    .history{ padding: 14px; display:flex; flex-direction:column; gap: 10px; }
+
+    .historyTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .historyTop h3{
+      margin:0;
+      font-size: 13px;
+      letter-spacing: .2px;
+      color: var(--text);
+    }
+    .chip{
+      font-size: 12px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .historyControls{
+      display:flex;
+      gap:10px;
+      width:100%;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap: wrap;
+    }
+    .select{
+      flex: 1 1 220px;
+      min-width: 180px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline:none;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .mini{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 900;
+      cursor:pointer;
+      white-space: nowrap;
+    }
+
+    .summaryBox{
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(0,0,0,.16);
+      padding: 10px 12px;
+      display:flex;
+      gap: 10px;
+      justify-content:space-between;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .summaryBox b{ color: var(--text); }
+    .summaryItem{ display:flex; gap:6px; align-items:baseline; }
+
+    .list{ display:flex; flex-direction:column; gap: 10px; }
+
+    details{
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.03);
+      overflow:hidden;
+    }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      padding: 12px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    summary::-webkit-details-marker{ display:none; }
+
+    .s-left{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+    .s-top{ display:flex; align-items:center; gap: 8px; flex-wrap: wrap; }
+
+    .tag{
+      font-size: 11px;
+      font-weight: 900;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(34,197,94,.35);
+      background: rgba(34,197,94,.12);
+      color: #bfffd2;
+    }
+    .tag.saida{
+      border-color: rgba(255,90,106,.35);
+      background: rgba(255,90,106,.10);
+      color: #ffd2d7;
+    }
+    .dt{ font-size: 12px; color: var(--text); font-weight: 800; white-space: nowrap; }
+    .loc{
+      font-size: 12px;
+      color: var(--muted);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space: nowrap;
+      max-width: 340px;
+    }
+    .s-right{ display:flex; align-items:center; gap: 10px; flex:0 0 auto; }
+    .thumb{
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.25);
+    }
+    .chev{
+      width: 22px; height: 22px;
+      border-radius: 999px;
+      display:grid;
+      place-items:center;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .detailsBody{
+      border-top: 1px solid var(--line);
+      padding: 12px 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .detailsRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .k{ font-weight: 900; color: var(--text); }
+    .linkbtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(191,224,255,.35);
+      background: rgba(191,224,255,.08);
+      color: #bfe0ff;
+      font-weight: 900;
+      text-decoration:none;
+    }
+
+    .empty{
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      text-align:left;
+      background: rgba(255,255,255,.02);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo-dot"></div>
+        <h1>Sistema de Ponto</h1>
+      </div>
+      <div class="top-actions">
+        <button id="btnLogoutTop" class="btn btn-ghost" style="display:none;">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status"></div>
+
+  <main class="wrap">
+    <!-- LOGIN -->
+    <section id="loginCard" class="card">
+      <div class="card-head">
+        <div>
+          <p class="card-title">Entrar</p>
+          <p class="sub">Use seu e-mail e senha cadastrados no Firebase Auth.</p>
+        </div>
+      </div>
+
+      <div class="form">
+        <div class="field">
+          <span class="label">E-mail</span>
+          <input id="email" class="input" type="email" placeholder="seuemail@exemplo.com" autocomplete="username" />
+        </div>
+
+        <div class="field">
+          <span class="label">Senha</span>
+          <input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+
+        <div class="row">
+          <button id="btnLogin" class="btn btn-primary">Login</button>
+          <button id="btnSignup" class="btn btn-ghost">Cadastrar</button>
+        </div>
+
+        <div class="hint">
+          Se você não quer permitir cadastro pelo app, pode ocultar o botão “Cadastrar”.
+        </div>
+      </div>
+    </section>
+
+    <!-- PONTO -->
+    <section id="punchCard" class="card" style="display:none;">
+      <div class="card-head">
+        <div style="min-width:0;">
+          <p class="card-title">Registrar Ponto</p>
+          <p class="sub" id="userInfo">—</p>
+        </div>
+        <div id="nextTypePill" class="pill" style="display:none;">
+          <span class="dot"></span>
+          <span id="nextTypeText">Próximo: —</span>
+        </div>
+      </div>
+
+      <div class="camera">
+        <div class="videoWrap">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="canvas" width="320" height="240"></canvas>
+        </div>
+
+        <button id="punchBtn" class="btn btn-primary" style="width:100%;">Bater ponto</button>
+
+        <div class="meta">
+          <div><b>Localização:</b> <span id="locText">coletando…</span></div>
+          <div><b>Data/Hora:</b> gravada no servidor ao registrar</div>
+          <small>Obs.: câmera e geolocalização exigem HTTPS (ou localhost).</small>
+        </div>
+
+        <div id="saveResult" class="result" style="display:none;"></div>
+
+        <div id="adminLink" style="display:none; margin-top:4px; text-align:left;">
+          <a class="linkbtn" href="admin.html">Ir para Área Admin</a>
+        </div>
+      </div>
+
+      <div class="history">
+        <div class="historyTop">
+          <h3>Histórico</h3>
+          <span class="chip" id="historyCount">0</span>
+        </div>
+
+        <div class="historyControls">
+          <select id="monthSelect" class="select"></select>
+          <button id="btnReloadHistory" class="mini">Atualizar</button>
+        </div>
+
+        <div class="summaryBox" id="monthSummary" style="display:none;">
+          <div class="summaryItem"><b>Entradas:</b> <span id="sumIn">0</span></div>
+          <div class="summaryItem"><b>Saídas:</b> <span id="sumOut">0</span></div>
+          <div class="summaryItem"><b>Registros:</b> <span id="sumTotal">0</span></div>
+        </div>
+
+        <div id="historyEmpty" class="empty" style="display:none;">
+          Nenhum registro encontrado para este mês.
+        </div>
+
+        <div id="historyList" class="list"></div>
+
+        <button id="btnMore" class="btn btn-ghost" style="display:none; width:100%;">Carregar mais</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      addDoc,
+      collection,
+      serverTimestamp,
+      query,
+      where,
+      orderBy,
+      limit,
+      getDocs,
+      startAfter
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    import {
+      getStorage,
+      ref,
+      uploadString,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOyhVCdV1dUWdgQXnPWhRHTb6xVYn68bk",
+      authDomain: "spq-v1.firebaseapp.com",
+      projectId: "spq-v1",
+      storageBucket: "spq-v1.firebasestorage.app",
+      messagingSenderId: "472363662852",
+      appId: "1:472363662852:web:10517568e7a010ff203f51"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // ELEMENTOS
+    const statusEl = document.getElementById("status");
+    const loginCard = document.getElementById("loginCard");
+    const punchCard = document.getElementById("punchCard");
+
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
+    const btnLogin = document.getElementById("btnLogin");
+    const btnSignup = document.getElementById("btnSignup");
+    const btnLogoutTop = document.getElementById("btnLogoutTop");
+
+    const userInfo = document.getElementById("userInfo");
+    const adminLink = document.getElementById("adminLink");
+
+    const nextTypePill = document.getElementById("nextTypePill");
+    const nextTypeText = document.getElementById("nextTypeText");
+
+    const punchBtn = document.getElementById("punchBtn");
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const locText = document.getElementById("locText");
+    const saveResult = document.getElementById("saveResult");
+
+    const monthSelect = document.getElementById("monthSelect");
+    const btnReloadHistory = document.getElementById("btnReloadHistory");
+    const monthSummary = document.getElementById("monthSummary");
+    const sumIn = document.getElementById("sumIn");
+    const sumOut = document.getElementById("sumOut");
+    const sumTotal = document.getElementById("sumTotal");
+
+    const historyList = document.getElementById("historyList");
+    const historyEmpty = document.getElementById("historyEmpty");
+    const historyCount = document.getElementById("historyCount");
+    const btnMore = document.getElementById("btnMore");
+
+    // ESTADO
+    let localizacao = { lat: null, lon: null, text: "" };
+    let currentUserProfile = null;
+    let isSaving = false;
+
+    // paginação
+    const PAGE_SIZE = 5;
+    let lastVisibleDoc = null;
+    let hasMore = false;
+    let currentMonthRange = null; // {start: Date, end: Date}
+    let currentUid = null;
+
+    function setStatus(msg){ statusEl.textContent = msg || ""; }
+
+    function showResult(html, kind="ok"){
+      saveResult.style.display = "block";
+      saveResult.className = `result ${kind}`;
+      saveResult.innerHTML = html;
+    }
+
+    function setNextTypeUI(type){
+      nextTypePill.style.display = "inline-flex";
+      nextTypeText.textContent = `Próximo: ${type}`;
+    }
+
+    function formatTs(ts){
+      const d = ts?.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+      if (!d) return "—";
+      return d.toLocaleString("pt-BR");
+    }
+
+    function monthLabel(date){
+      return date.toLocaleDateString("pt-BR", { month: "long", year:"numeric" });
+    }
+
+    function getMonthRange(date){
+      const start = new Date(date.getFullYear(), date.getMonth(), 1, 0,0,0,0);
+      const end = new Date(date.getFullYear(), date.getMonth() + 1, 1, 0,0,0,0); // exclusivo
+      return { start, end };
+    }
+
+    function getLastNMonths(n=3){
+      const arr = [];
+      const now = new Date();
+      for (let i=0;i<n;i++){
+        const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+        arr.push(d);
+      }
+      return arr;
+    }
+
+    function renderMonthOptions(){
+      monthSelect.innerHTML = "";
+      const months = getLastNMonths(3);
+      months.forEach((d, idx) => {
+        const opt = document.createElement("option");
+        opt.value = String(d.getFullYear()) + "-" + String(d.getMonth()); // ex: 2026-0
+        opt.textContent = idx===0 ? `Mês atual • ${monthLabel(d)}` : monthLabel(d);
+        monthSelect.appendChild(opt);
+      });
+    }
+
+    function parseMonthValue(val){
+      const [y, m] = val.split("-").map(Number);
+      return new Date(y, m, 1);
+    }
+
+    function clearHistoryUI(){
+      historyList.innerHTML = "";
+      historyEmpty.style.display = "none";
+      historyCount.textContent = "0";
+      monthSummary.style.display = "none";
+      sumIn.textContent = "0";
+      sumOut.textContent = "0";
+      sumTotal.textContent = "0";
+      btnMore.style.display = "none";
+      lastVisibleDoc = null;
+      hasMore = false;
+    }
+
+    function appendHistoryItems(items, openFirst=false){
+      items.forEach((it, idx) => {
+        const type = String(it.type || "").toUpperCase();
+        const isSaida = type === "SAIDA";
+        const dt = formatTs(it.createdAt);
+        const loc = it.locationText || "Localização indisponível";
+
+        const details = document.createElement("details");
+        if (openFirst && idx === 0) details.open = true;
+
+        const thumb = it.selfieUrl
+          ? `<img class="thumb" src="${it.selfieUrl}" alt="Selfie">`
+          : `<div class="thumb" title="Sem selfie"></div>`;
+
+        details.innerHTML = `
+          <summary>
+            <div class="s-left">
+              <div class="s-top">
+                <span class="tag ${isSaida ? "saida" : ""}">${type || "—"}</span>
+                <span class="dt">${dt}</span>
+              </div>
+              <div class="loc">${loc}</div>
+            </div>
+            <div class="s-right">
+              ${thumb}
+              <div class="chev">›</div>
+            </div>
+          </summary>
+          <div class="detailsBody">
+            <div class="detailsRow">
+              <span><span class="k">Tipo:</span> ${type || "—"}</span>
+              <span><span class="k">Data/Hora:</span> ${dt}</span>
+            </div>
+            <div class="detailsRow">
+              <span class="k">Localização:</span>
+              <span>${loc}</span>
+            </div>
+            ${it.selfieUrl ? `
+              <div class="detailsRow">
+                <a class="linkbtn" href="${it.selfieUrl}" target="_blank" rel="noopener">Ver selfie</a>
+              </div>
+            ` : ``}
+          </div>
+        `;
+        historyList.appendChild(details);
+      });
+    }
+
+    // GEO
+    function coletarLocalizacao(){
+      if (!navigator.geolocation){
+        locText.textContent = "Geolocalização não suportada.";
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = Number(pos.coords.latitude.toFixed(6));
+          const lon = Number(pos.coords.longitude.toFixed(6));
+          localizacao = { lat, lon, text: `Lat: ${lat}, Lon: ${lon}` };
+          locText.textContent = localizacao.text;
+        },
+        () => { locText.textContent = "Sem permissão de localização."; },
+        { enableHighAccuracy:true, timeout:10000 }
+      );
+    }
+
+    // CAMERA
+    async function iniciarCamera(){
+      try{
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+      }catch(e){
+        console.error(e);
+        alert("Erro ao acessar câmera. Verifique permissões.");
+      }
+    }
+
+    // PERFIL
+    async function loadUserProfile(uid, email){
+      const userRef = doc(db, "users", uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists()){
+        await setDoc(userRef, {
+          name: email,
+          role: "user",
+          createdAt: serverTimestamp()
+        }, { merge:true });
+      }
+      const snap2 = await getDoc(userRef);
+      return snap2.data();
+    }
+
+    // TIPO AUTOMÁTICO
+    async function determineNextTypeForUser(uid){
+      const q = query(
+        collection(db, "punches"),
+        where("uid", "==", uid),
+        orderBy("createdAt", "desc"),
+        limit(1)
+      );
+      const snap = await getDocs(q);
+      if (snap.empty) return "ENTRADA";
+      const last = snap.docs[0].data();
+      const lastType = String(last?.type || "").toUpperCase();
+      return (lastType === "ENTRADA") ? "SAIDA" : "ENTRADA";
+    }
+
+    // HISTÓRICO POR MÊS (PAGINADO)
+    async function loadMonthSummary(uid, range){
+      // pega um pouco mais para contar (não explode)
+      const q = query(
+        collection(db, "punches"),
+        where("uid", "==", uid),
+        where("createdAt", ">=", range.start),
+        where("createdAt", "<", range.end),
+        orderBy("createdAt", "desc"),
+        limit(500)
+      );
+      const snap = await getDocs(q);
+      let entradas = 0, saidas = 0;
+      snap.docs.forEach(d => {
+        const t = String(d.data()?.type || "").toUpperCase();
+        if (t === "ENTRADA") entradas++;
+        else if (t === "SAIDA") saidas++;
+      });
+
+      monthSummary.style.display = "flex";
+      sumIn.textContent = String(entradas);
+      sumOut.textContent = String(saidas);
+      sumTotal.textContent = String(snap.size);
+      historyCount.textContent = String(snap.size);
+    }
+
+    async function loadHistoryPage(uid, range, reset=false){
+      if (reset){
+        clearHistoryUI();
+        currentUid = uid;
+        currentMonthRange = range;
+      }
+
+      const base = [
+        where("uid", "==", uid),
+        where("createdAt", ">=", range.start),
+        where("createdAt", "<", range.end),
+        orderBy("createdAt", "desc"),
+        limit(PAGE_SIZE)
+      ];
+
+      let q;
+      if (lastVisibleDoc){
+        q = query(collection(db, "punches"), ...base, startAfter(lastVisibleDoc));
+      } else {
+        q = query(collection(db, "punches"), ...base);
+      }
+
+      const snap = await getDocs(q);
+
+      if (snap.empty && !historyList.children.length){
+        historyEmpty.style.display = "block";
+        btnMore.style.display = "none";
+        hasMore = false;
+        return;
+      }
+
+      const items = snap.docs.map(d => d.data());
+      appendHistoryItems(items, reset); // abre o primeiro só no reset
+
+      lastVisibleDoc = snap.docs[snap.docs.length - 1] || lastVisibleDoc;
+
+      // se veio cheio, pode ter mais
+      hasMore = snap.size === PAGE_SIZE;
+      btnMore.style.display = hasMore ? "inline-flex" : "none";
+    }
+
+    async function reloadHistory(){
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const d = parseMonthValue(monthSelect.value);
+      const range = getMonthRange(d);
+
+      // resumo + primeira página
+      await loadMonthSummary(user.uid, range);
+      await loadHistoryPage(user.uid, range, true);
+    }
+
+    btnMore.addEventListener("click", async () => {
+      if (!currentUid || !currentMonthRange) return;
+      btnMore.disabled = true;
+      btnMore.textContent = "Carregando…";
+      try{
+        await loadHistoryPage(currentUid, currentMonthRange, false);
+      } finally {
+        btnMore.disabled = false;
+        btnMore.textContent = "Carregar mais";
+      }
+    });
+
+    btnReloadHistory.addEventListener("click", reloadHistory);
+    monthSelect.addEventListener("change", reloadHistory);
+
+    // AUTH
+    btnLogin.addEventListener("click", async () => {
+      try{
+        setStatus("Entrando…");
+        await signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+      }catch(e){
+        console.error(e);
+        setStatus("Falha no login. Verifique email/senha.");
+        alert("Falha no login. Verifique email e senha.");
+      }
+    });
+
+    btnSignup.addEventListener("click", async () => {
+      try{
+        setStatus("Cadastrando…");
+        await createUserWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+      }catch(e){
+        console.error(e);
+        setStatus("Falha no cadastro.");
+        alert("Falha no cadastro (talvez usuário já exista).");
+      }
+    });
+
+    btnLogoutTop.addEventListener("click", async () => { await signOut(auth); });
+
+    onAuthStateChanged(auth, async (user) => {
+      saveResult.style.display = "none";
+      isSaving = false;
+      punchBtn.disabled = false;
+
+      renderMonthOptions();
+      clearHistoryUI();
+
+      if (!user){
+        loginCard.style.display = "block";
+        punchCard.style.display = "none";
+        btnLogoutTop.style.display = "none";
+        nextTypePill.style.display = "none";
+        setStatus("Deslogado.");
+        return;
+      }
+
+      loginCard.style.display = "none";
+      punchCard.style.display = "block";
+      btnLogoutTop.style.display = "inline-flex";
+      setStatus("Logado.");
+
+      currentUserProfile = await loadUserProfile(user.uid, user.email || "usuario");
+      userInfo.textContent = `Usuário: ${currentUserProfile?.name || user.email} • Perfil: ${currentUserProfile?.role || "user"}`;
+      adminLink.style.display = ((currentUserProfile?.role || "user") === "admin") ? "block" : "none";
+
+      coletarLocalizacao();
+      iniciarCamera();
+
+      try{
+        setNextTypeUI("…");
+        const t = await determineNextTypeForUser(user.uid);
+        setNextTypeUI(t);
+      }catch(e){
+        console.error(e);
+        setNextTypeUI("ENTRADA");
+      }
+
+      // carrega mês atual (compacto)
+      await reloadHistory();
+    });
+
+    // BATER PONTO
+    punchBtn.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return alert("Você precisa estar logado.");
+      if (isSaving) return;
+
+      isSaving = true;
+      punchBtn.disabled = true;
+      showResult("Registrando ponto…", "ok");
+
+      try{
+        const tipoAtual = await determineNextTypeForUser(user.uid);
+        setNextTypeUI(tipoAtual);
+
+        if (video.readyState !== video.HAVE_ENOUGH_DATA){
+          throw new Error("Câmera ainda não pronta. Tente novamente.");
+        }
+
+        canvas.width = 320;
+        canvas.height = 240;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const agora = new Date();
+        const textoData = agora.toLocaleString("pt-BR");
+        const textoLoc = localizacao.text || "Localização indisponível";
+
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "white";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 3;
+
+        ctx.strokeText(textoData, 10, canvas.height - 46);
+        ctx.fillText(textoData, 10, canvas.height - 46);
+
+        ctx.strokeText(textoLoc, 10, canvas.height - 22);
+        ctx.fillText(textoLoc, 10, canvas.height - 22);
+
+        const imagemBase64 = canvas.toDataURL("image/jpeg", 0.85);
+
+        const ts = Date.now();
+        const path = `selfies/${user.uid}/${ts}.jpg`;
+        const storageRef = ref(storage, path);
+
+        await uploadString(storageRef, imagemBase64, "data_url");
+        const selfieUrl = await getDownloadURL(storageRef);
+
+        await addDoc(collection(db, "punches"), {
+          uid: user.uid,
+          userName: currentUserProfile?.name || user.email || "usuário",
+          type: tipoAtual,
+          locationText: localizacao.text || "",
+          lat: localizacao.lat,
+          lon: localizacao.lon,
+          selfiePath: path,
+          selfieUrl,
+          createdAt: serverTimestamp(),
+          clientTs: ts
+        });
+
+        showResult(`✅ Ponto registrado: <b>${tipoAtual}</b> · <a href="${selfieUrl}" target="_blank" rel="noopener">ver selfie</a>`, "ok");
+        setNextTypeUI(tipoAtual === "ENTRADA" ? "SAIDA" : "ENTRADA");
+
+        // recarrega o mês selecionado (sem poluir)
+        await reloadHistory();
+
+      }catch(e){
+        console.error(e);
+        showResult("Erro ao registrar ponto. Verifique permissões/regras e tente novamente.", "danger");
+      }finally{
+        isSaving = false;
+        punchBtn.disabled = false;
+      }
+    });
+  </script>
+
+  <script src="jsconfig.js"></script>
+</body>
+</html>
